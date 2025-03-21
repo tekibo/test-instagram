@@ -1,0 +1,5 @@
+name: graph-api-webhooks-samples
+type: web
+env: node
+buildCommand: npm install
+startCommand: npm start
