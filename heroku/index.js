@@ -10,7 +10,6 @@ var bodyParser = require('body-parser');
 var express = require('express');
 var app = express();
 var xhub = require('express-x-hub');
-var path = require('path');
 
 // Configuration
 const PORT = process.env.PORT || 5000;
@@ -26,20 +25,12 @@ if (!APP_SECRET) {
 app.use(xhub({ algorithm: 'sha1', secret: APP_SECRET }));
 app.use(bodyParser.json());
 
-// Serve static files from the public directory
-app.use(express.static(path.join(__dirname, '..', 'public')));
-
 // Store updates in memory (consider using a database for production)
 var received_updates = [];
 
-// Root endpoint - serve the HTML page
+// Root endpoint
 app.get('/', function(req, res) {
-  res.sendFile(path.join(__dirname, '..', 'public', 'index.html'));
-});
-
-// Updates endpoint
-app.get('/updates', function(req, res) {
-  res.json(received_updates);
+  res.send('<pre>' + JSON.stringify(received_updates, null, 2) + '</pre>');
 });
 
 // Webhook verification endpoint
@@ -67,54 +58,21 @@ app.post('/facebook', function(req, res) {
   }
 
   console.log('request header X-Hub-Signature validated');
-  const update = {
-    type: 'facebook',
-    timestamp: new Date().toISOString(),
-    data: req.body
-  };
-  received_updates.unshift(update);
-  
-  // Keep only the last 100 updates
-  if (received_updates.length > 100) {
-    received_updates = received_updates.slice(0, 100);
-  }
-  
+  received_updates.unshift(req.body);
   res.sendStatus(200);
 });
 
 // Instagram webhook endpoint
 app.post('/instagram', function(req, res) {
   console.log('Instagram request body:', req.body);
-  const update = {
-    type: 'instagram',
-    timestamp: new Date().toISOString(),
-    data: req.body
-  };
-  received_updates.unshift(update);
-  
-  // Keep only the last 100 updates
-  if (received_updates.length > 100) {
-    received_updates = received_updates.slice(0, 100);
-  }
-  
+  received_updates.unshift(req.body);
   res.sendStatus(200);
 });
 
 // Threads webhook endpoint
 app.post('/threads', function(req, res) {
   console.log('Threads request body:', req.body);
-  const update = {
-    type: 'threads',
-    timestamp: new Date().toISOString(),
-    data: req.body
-  };
-  received_updates.unshift(update);
-  
-  // Keep only the last 100 updates
-  if (received_updates.length > 100) {
-    received_updates = received_updates.slice(0, 100);
-  }
-  
+  received_updates.unshift(req.body);
   res.sendStatus(200);
 });
 
